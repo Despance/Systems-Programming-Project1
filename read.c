@@ -2,15 +2,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-void readFile(char fileName[], char order, int size);
+void readFile(char fileName[], char order, char type[], int size);
 void hexToBin (char hex[][3], int bin[], int size);
 
 int main(int argc, char* argv[]) {
     //readFile(argv[1], argv[2][0], argv[3][0]);
-    readFile("input.txt", 'l', 4);
+    readFile("input.txt", 'l', "int", 4);
 }
 
-void readFile(char fileName[], char order, int size) {
+void readFile(char fileName[], char order, char type[], int size) {
     FILE* input = fopen(fileName, "r");
     char hex[size][3]; 
 
