@@ -3,10 +3,15 @@
 
 void readFile(char fileName[], char order, char type[], int size);
 void hexToBin (char hex[][3], int bin[], int size);
+int bitToIntSigned(char bits[32]);
+unsigned int bitToIntUnsigned(char bits[32]);
 
 int main(int argc, char* argv[]) {
     //readFile(argv[1], argv[2][0], argv[3], argv[4][0]-48);
-    readFile("input.txt", 'l', "int", 4);
+    //readFile("input.txt", 'l', "int", 4);
+    char bits[32] = "10110000001101000001100001100001"; // unsigned 2956204129
+    bitToIntUnsigned(bits);
+    return 0;
 }
 
 /* This function reads the input file according to byte ordering and size of the data */
@@ -49,4 +54,41 @@ void hexToBin (char hex[][3], int bin[], int size) {
             }
         }
     }
+}
+
+int bitToIntSigned(char bits[32]){
+    int number = 0, power = 1;
+    if (bits[0]=='0'){
+        for(int i = 31; i>=1 ; i--){
+            if(bits[i]=='1'){
+                number += power;
+            }
+            power *=2;
+        }
+    }
+    else if(bits[0]=='1'){
+        for(int i = 31; i>=1 ; i--){
+            if(bits[i]=='0'){
+                number += power;
+            }
+            power *=2;
+        }
+        number+=1;
+        number*=-1;
+    }
+    else{
+        printf("Invalid first bit.");
+    }
+    return number;
+}
+
+unsigned int bitToIntUnsigned(char bits[32]){
+    unsigned int number = 0, power = 1;
+    for(int i = 31; i>=0 ; i--){
+        if(bits[i]=='1'){
+            number += power;
+        }
+        power *=2;
+    }
+    return number;
 }
