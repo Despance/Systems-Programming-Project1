@@ -5,61 +5,74 @@
 
 #define min(X, Y) (((X) < (Y)) ? (X) : (Y))
 
-void readFile(char fileName[], char order, char type[], int size);
-void hexToBin (char hex[][3], int bin[], int size);
+void readFile(char fileName[], char byteOrder, char type[], int dataSize);
+void hexToBin(char hex[][3], char bin[], int dataSize);
+void BinaryToIEEE(char* binaryNumber, int dataTypeSize);
+
+FILE* output;
 
 int main(int argc, char* argv[]) {
-    //readFile(argv[1], argv[2][0], argv[3], argv[4][0]-48);
-    readFile("input.txt", 'l', "int", 4);
+    output = fopen("output.txt", "w");
+    //readFile(argv[1], argv[2][0], argv[3], argv[4][0]-'0');
+    readFile("input.txt", 'l', "float", 4);
 }
 
-/* This function reads the input file according to byte ordering and size of the data */
-void readFile(char fileName[], char order, char type[], int size) {
+/* This function reads the input file according to byte ordering and dataSize of the data */
+void readFile(char fileName[], char byteOrder, char dataType[], int dataSize) {
     FILE* input = fopen(fileName, "r");
-    char hex[size][3]; 
+    char hex[dataSize][3]; 
+    char temp[3];
 
-    while(!feof(input)) {
-        for (int i = 0; i < size; i++) {
-            // if the byte ordering type is BigEndian read data from beginning
-            if (order == 'b') {
-                for (int j = 0; j < size; j++) 
-                    fscanf(input, "%s", hex[j]);
-            }
-            // if the byte ordering type is LittleEndian read data from the end
-            else if (order == 'l') {
-                for (int j = size - 1; j >= 0; j--) 
-                fscanf(input, "%s", hex[j]);
-            }
-
-            int bin[8*size];
-            hexToBin(hex, bin, size);
+    int count = 1;
+    while(fscanf(input, "%s", temp) == 1) {
+        if ((count - 1) % (12 / dataSize) == 0 && count != 1)
+            fprintf(output, "\n");
+        
+        // if the byte ordering type is BigEndian read data from beginning
+        if (byteOrder == 'b') {
+            strcpy(hex[0], temp);
+            for (int i = 1; i < dataSize; i++) 
+                fscanf(input, "%s", hex[i]);
         }
-    }
+        // if the byte ordering type is LittleEndian read data from the end
+        else if (byteOrder == 'l') {
+            strcpy(hex[dataSize - 1], temp);
+            for (int i = dataSize - 2; i >= 0; i--) 
+                fscanf(input, "%s", hex[i]);
+        }
+
+        char bin[8*dataSize];
+        hexToBin(hex, bin, dataSize);
+
+        if (dataType == "float") 
+            BinaryToIEEE(bin, dataSize);
+
+        if (count % (12 / dataSize) != 0) 
+            fprintf(output, " ");
+
+        count++;
+    }  
 }
 
 /* This function converts hexadecimal data to binary */
-void hexToBin (char hex[][3], int bin[], int size) {
+void hexToBin(char hex[][3], char bin[], int dataSize) {
     // convert hexadecimal data to binary
-    for (int i = 0; i < size; i++) {
+    for (int i = 0; i < dataSize; i++) {
         for (int j = 0; j < 2; j++) {
             int dec;
-            if (hex[i][j] <= 57)
-                dec = hex[i][j] - 48; // for 0-9
+            if (hex[i][j] <= '9')
+                dec = hex[i][j] - '0'; // for 0-9
             else 
-                dec = hex[i][j] - 87; // for a-f
+                dec = hex[i][j] - 'a' + 10; // for a-f
             for (int k = 0; k < 4; k++) {
-                bin[3+(i*8)+(j*4)-k] = dec % 2;
+                bin[3+(i*8)+(j*4)-k] = (dec % 2) + '0'; // int to char
                 dec /= 2;
             }
         }
     }
 }
 
-
-
-
-
-double BinaryToIEEE(char* binaryNumber, int dataTypeSize){
+void BinaryToIEEE(char* binaryNumber, int dataTypeSize) {
 
     //Calculate the boundaries and bias
     int expDigitSize = 2 + dataTypeSize*2;
@@ -67,6 +80,7 @@ double BinaryToIEEE(char* binaryNumber, int dataTypeSize){
     int exponentValue = 0;
     float fractionValue = 1 ;
     int bias = pow(2,expDigitSize-1)-1;
+    int sign = binaryNumber[0]-'0';
 
     //Calculating the exponent
     for (int i = expDigitSize+1; i > 0 ; i--)
@@ -79,8 +93,7 @@ double BinaryToIEEE(char* binaryNumber, int dataTypeSize){
     //Rounding the mantissa
     int roundedDigit = expDigitSize+14;
     int roundToEven = 1;
-    if (dataTypeSize>2 && binaryNumber[roundedDigit--]== '1')
-    {
+    if (dataTypeSize>2 && binaryNumber[roundedDigit--]== '1') {
         //Round Up
         for (int i = roundedDigit+2; i < dataTypeSize*8; i++)
         {
@@ -96,8 +109,7 @@ double BinaryToIEEE(char* binaryNumber, int dataTypeSize){
         }
 
         //Round to Even
-        if (roundToEven && binaryNumber[roundedDigit] == '1')
-        {
+        if (roundToEven && binaryNumber[roundedDigit] == '1') {
             while(binaryNumber[roundedDigit]!='0')
                 binaryNumber[roundedDigit--]='0';
 
@@ -106,30 +118,31 @@ double BinaryToIEEE(char* binaryNumber, int dataTypeSize){
     }
 
     //Calculating the mantissa
-    for (int i = expDigitSize+1; i < fractionLastIndex; i++)
-    {
+    for (int i = expDigitSize+1; i < fractionLastIndex; i++) {
         fractionValue+= (binaryNumber[i]-'0')*pow(2,expDigitSize-i);
         
     }
     
     //Classifying and calculating the result.
-    if (exponentValue == pow(2,expDigitSize)-1)//Special values
-    {
-        if (fractionValue == 0 || fractionValue == 1)
-            return (binaryNumber[0]=='0')? 1.0/0.0:-1.0/0.0;
+    if (exponentValue == pow(2,expDigitSize)-1) { //Special values 
+        if (fractionValue == 0 || fractionValue == 1) {
+            if (sign==0)
+                fprintf(output, "∞");
+            else
+                fprintf(output, "-∞");
+        }
         else
-            return 0.0/0.0;
+            fprintf(output, "NaN");
     }
-    else if (exponentValue == 0) // Denormalized values
-    {
-        //!! Denormalized values must be printied using %e identifier.
-        double result = fractionValue/pow(2,bias-1);
-        return (binaryNumber[0]=='0')? result:-result;
+    else if (exponentValue == 0) { // Denormalized values 
+        double result = pow(-1, sign)*fractionValue/pow(2,bias-1);
+        if (result==0) 
+            fprintf(output, "%.0f", result);
+        else
+            fprintf(output, "%.5e", result);
     }
-    else    //Normalized values
-    {
-        float result = fractionValue*pow(2,exponentValue-bias);
-        return (binaryNumber[0]=='0')? result:-result;
+    else {   //Normalized values
+        float result = pow(-1, sign)*fractionValue*pow(2,exponentValue-bias);
+        fprintf(output, "%.5f", result);
     }
-
 }
