@@ -8,6 +8,8 @@
 void readFile(char fileName[], char byteOrder, char type[], int dataSize);
 void hexToBin(char hex[][3], char bin[], int dataSize);
 void BinaryToIEEE(char* binaryNumber, int dataTypeSize);
+int bitToIntSigned(char bits[32]);
+unsigned int bitToIntUnsigned(char bits[32]);
 
 FILE* output;
 
@@ -73,7 +75,6 @@ void hexToBin(char hex[][3], char bin[], int dataSize) {
 }
 
 void BinaryToIEEE(char* binaryNumber, int dataTypeSize) {
-
     //Calculate the boundaries and bias
     int expDigitSize = 2 + dataTypeSize*2;
     int fractionLastIndex = min(dataTypeSize*8,expDigitSize+14);
@@ -145,4 +146,41 @@ void BinaryToIEEE(char* binaryNumber, int dataTypeSize) {
         float result = pow(-1, sign)*fractionValue*pow(2,exponentValue-bias);
         fprintf(output, "%.5f", result);
     }
+}
+
+int bitToIntSigned(char bits[32]){
+    int number = 0, power = 1;
+    if (bits[0]=='0'){
+        for(int i = 31; i>=1 ; i--){
+            if(bits[i]=='1'){
+                number += power;
+            }
+            power *=2;
+        }
+    }
+    else if(bits[0]=='1'){
+        for(int i = 31; i>=1 ; i--){
+            if(bits[i]=='0'){
+                number += power;
+            }
+            power *=2;
+        }
+        number+=1;
+        number*=-1;
+    }
+    else{
+        printf("Invalid first bit.");
+    }
+    return number;
+}
+
+unsigned int bitToIntUnsigned(char bits[32]){
+    unsigned int number = 0, power = 1;
+    for(int i = 31; i>=0 ; i--){
+        if(bits[i]=='1'){
+            number += power;
+        }
+        power *=2;
+    }
+    return number;
 }
