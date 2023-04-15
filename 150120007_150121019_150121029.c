@@ -7,16 +7,19 @@
 
 void readFile(char fileName[], char byteOrder, char type[], int dataSize);
 void hexToBin(char hex[][3], char bin[], int dataSize);
-void BinaryToIEEE(char* binaryNumber, int dataTypeSize);
-int bitToIntSigned(char bits[32]);
-unsigned int bitToIntUnsigned(char bits[32]);
+void binaryToIEEE(char* binaryNumber, int dataTypeSize);
+void bitToIntSigned(char bits[], int dataSize);
+void bitToIntUnsigned(char bits[], int dataSize);
 
 FILE* output;
 
-int main(int argc, char* argv[]) {
-    output = fopen("output.txt", "w");
-    //readFile(argv[1], argv[2][0], argv[3], argv[4][0]-'0');
-    readFile("input.txt", 'l', "float", 4);
+int main(int argc, char* argv[]) { 
+    output = fopen("output.txt", "w");  
+ 
+    if (argc == 5)  
+        readFile(argv[1], argv[2][0], argv[3], (argv[4][0]-'0'));
+    else 
+        printf("Inputs are missing");
 }
 
 /* This function reads the input file according to byte ordering and dataSize of the data */
@@ -46,8 +49,13 @@ void readFile(char fileName[], char byteOrder, char dataType[], int dataSize) {
         char bin[8*dataSize];
         hexToBin(hex, bin, dataSize);
 
-        if (dataType == "float") 
-            BinaryToIEEE(bin, dataSize);
+        // call function acording to given dataType
+        if (strcmp(dataType, "float") == 0)
+            binaryToIEEE(bin, dataSize);
+        else if (strcmp(dataType, "int") == 0)
+            bitToIntSigned(bin, dataSize);
+        else 
+            bitToIntUnsigned(bin, dataSize);
 
         if (count % (12 / dataSize) != 0) 
             fprintf(output, " ");
@@ -74,7 +82,7 @@ void hexToBin(char hex[][3], char bin[], int dataSize) {
     }
 }
 
-void BinaryToIEEE(char* binaryNumber, int dataTypeSize) {
+void binaryToIEEE(char* binaryNumber, int dataTypeSize) {
     //Calculate the boundaries and bias
     int expDigitSize = 2 + dataTypeSize*2;
     int fractionLastIndex = min(dataTypeSize*8,expDigitSize+14);
@@ -148,10 +156,10 @@ void BinaryToIEEE(char* binaryNumber, int dataTypeSize) {
     }
 }
 
-int bitToIntSigned(char bits[32]){
+void bitToIntSigned(char bits[], int dataSize){
     int number = 0, power = 1;
     if (bits[0]=='0'){
-        for(int i = 31; i>=1 ; i--){
+        for(int i = 8*dataSize-1; i>=1 ; i--){
             if(bits[i]=='1'){
                 number += power;
             }
@@ -168,19 +176,17 @@ int bitToIntSigned(char bits[32]){
         number+=1;
         number*=-1;
     }
-    else{
-        printf("Invalid first bit.");
-    }
-    return number;
+
+    fprintf(output, "%d", number);
 }
 
-unsigned int bitToIntUnsigned(char bits[32]){
+void bitToIntUnsigned(char bits[], int dataSize){
     unsigned int number = 0, power = 1;
-    for(int i = 31; i>=0 ; i--){
+    for(int i = 8*dataSize-1; i>=0 ; i--){
         if(bits[i]=='1'){
             number += power;
         }
         power *=2;
     }
-    return number;
+    fprintf(output, "%u", number);
 }
