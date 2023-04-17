@@ -87,8 +87,8 @@ void binaryToIEEE(char* binaryNumber, int dataTypeSize) {
     int expDigitSize = 2 + dataTypeSize*2;
     int fractionLastIndex = min(dataTypeSize*8,expDigitSize+14);
     int exponentValue = 0;
-    float fractionValue = 1 ;
-    int bias = pow(2,expDigitSize-1)-1;
+    double fractionValue = 1 ;
+    long bias = pow(2,expDigitSize-1)-1;
     int sign = binaryNumber[0]-'0';
 
     //Calculating the exponent
@@ -146,13 +146,13 @@ void binaryToIEEE(char* binaryNumber, int dataTypeSize) {
     else if (exponentValue == 0) { // Denormalized values 
         double result = pow(-1, sign)*fractionValue/pow(2,bias-1);
         if (result==0) 
-            fprintf(output, "%.0f", result);
+            fprintf(output, "%.0lf", result);
         else
             fprintf(output, "%.5e", result);
     }
     else {   //Normalized values
-        float result = pow(-1, sign)*fractionValue*pow(2,exponentValue-bias);
-        fprintf(output, "%.5f", result);
+        double result = pow(-1, sign)*fractionValue*pow(2,exponentValue-bias);
+        fprintf(output, "%.5lf", result);
     }
 }
 
