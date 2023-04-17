@@ -1,3 +1,9 @@
+/**
+ * Mustafa Emir Uyar - 150120007
+ * Umut Özil - 150121019
+ * Ege Keklikçi - 150121029
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,8 +20,10 @@ void bitToIntUnsigned(char bits[], int dataSize);
 FILE* output;
 
 int main(int argc, char* argv[]) { 
+    // create a file for output in writing mode
     output = fopen("output.txt", "w");  
  
+    // take the inputs as command-line arguments
     if (argc == 5)  
         readFile(argv[1], argv[2][0], argv[3], (argv[4][0]-'0'));
     else 
@@ -54,7 +62,7 @@ void readFile(char fileName[], char byteOrder, char dataType[], int dataSize) {
             binaryToIEEE(bin, dataSize);
         else if (strcmp(dataType, "int") == 0)
             bitToIntSigned(bin, dataSize);
-        else 
+        else if (strcmp(dataType, "unsigned") == 0)
             bitToIntUnsigned(bin, dataSize);
 
         if (count % (12 / dataSize) != 0) 
@@ -82,6 +90,7 @@ void hexToBin(char hex[][3], char bin[], int dataSize) {
     }
 }
 
+/* This function converts given binary number to float using IEEE-like format */
 void binaryToIEEE(char* binaryNumber, int dataTypeSize) {
     //Calculate the boundaries and bias
     int expDigitSize = 2 + dataTypeSize*2;
@@ -148,45 +157,48 @@ void binaryToIEEE(char* binaryNumber, int dataTypeSize) {
         if (result==0) 
             fprintf(output, "%.0f", result);
         else
-            fprintf(output, "%.5e", result);
+            fprintf(output, "%g", result);
     }
     else {   //Normalized values
         float result = pow(-1, sign)*fractionValue*pow(2,exponentValue-bias);
-        fprintf(output, "%.5f", result);
+        fprintf(output, "%g", result);
     }
 }
 
-void bitToIntSigned(char bits[], int dataSize){
+/* This function converts given binary number to integer using 2's compelement representation */
+void bitToIntSigned(char bits[], int dataSize) {
     int number = 0, power = 1;
-    if (bits[0]=='0'){
-        for(int i = 8*dataSize-1; i>=1 ; i--){
-            if(bits[i]=='1'){
+    if (bits[0]=='0') {
+        for (int i=8*dataSize-1; i>=1 ; i--) {
+            if (bits[i]=='1') {
                 number += power;
             }
-            power *=2;
+            power *= 2;
         }
     }
-    else if(bits[0]=='1'){
-        for(int i = 31; i>=1 ; i--){
-            if(bits[i]=='0'){
+    // for calculating negative numbers first invert the digits and calculate the number
+    else if(bits[0]=='1') {
+        for (int i=8*dataSize-1; i >= 1 ; i--) {
+            if (bits[i]=='0') {
                 number += power;
             }
-            power *=2;
+            power *= 2;
         }
-        number+=1;
-        number*=-1;
+        // then add one to the number and multiply by -1
+        number += 1;
+        number *= -1;
     }
-
     fprintf(output, "%d", number);
 }
 
-void bitToIntUnsigned(char bits[], int dataSize){
+/* This function converts given binary number to unsigned integer */
+void bitToIntUnsigned(char bits[], int dataSize) {
     unsigned int number = 0, power = 1;
-    for(int i = 8*dataSize-1; i>=0 ; i--){
-        if(bits[i]=='1'){
+    for (int i=8*dataSize-1; i>=0 ; i--) {
+        if (bits[i]=='1') {
             number += power;
         }
-        power *=2;
+        power *= 2;
     }
     fprintf(output, "%u", number);
 }
